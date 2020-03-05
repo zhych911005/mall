@@ -19,7 +19,6 @@ import javax.validation.Valid;
 @RestController
 public class CartController {
 
-    //提交测试
     @PostMapping("/carts")
     public ResponseVo<CartVo> add(@Valid @RequestBody CartAddForm cartAddForm) {
         return null;

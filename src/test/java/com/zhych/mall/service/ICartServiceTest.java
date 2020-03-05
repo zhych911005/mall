@@ -18,6 +18,7 @@ public class ICartServiceTest extends MallApplicationTests {
     @Autowired
     private ICartService cartService;
 
+    //测试
     @Test
     public void add() {
         CartAddForm form = new CartAddForm();
@@ -25,5 +26,4 @@ public class ICartServiceTest extends MallApplicationTests {
         form.setSelected(true);
         cartService.add(1, form);
     }
-
 }

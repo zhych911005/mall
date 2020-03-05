@@ -17,5 +17,5 @@ public class CartAddForm {
     @NotNull
     private Integer productId;
 
-    private boolean selected = true;
+    private Boolean selected = true;
 }

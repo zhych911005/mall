@@ -4,6 +4,9 @@ spring:
     username: root
     password: 369123
     url: jdbc:mysql://127.0.0.1:3306/mall?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&useSSL=false
+  redis:
+    host: 127.0.0.1
+    port: 6379
 mybatis:
   configuration:
     map-underscore-to-camel-case: true

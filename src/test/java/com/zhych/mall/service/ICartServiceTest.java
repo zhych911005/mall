@@ -18,7 +18,6 @@ public class ICartServiceTest extends MallApplicationTests {
     @Autowired
     private ICartService cartService;
 
-    //测试
     @Test
     public void add() {
         CartAddForm form = new CartAddForm();

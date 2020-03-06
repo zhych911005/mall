@@ -15,7 +15,7 @@ public class Cart {
 
     private Integer quantity;
 
-    private boolean productSelected;
+    private Boolean productSelected;
 
     public Cart() {
     }

@@ -9,12 +9,21 @@ import com.zhych.mall.form.CartAddForm;
 import com.zhych.mall.pojo.Cart;
 import com.zhych.mall.pojo.Product;
 import com.zhych.mall.service.ICartService;
+import com.zhych.mall.vo.CartProductVo;
 import com.zhych.mall.vo.CartVo;
+import com.zhych.mall.vo.ProductVo;
 import com.zhych.mall.vo.ResponseVo;
-import org.apache.catalina.authenticator.SingleSignOn;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import javax.swing.text.html.parser.Entity;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created By Superman
@@ -53,8 +62,67 @@ public class CartServiceImpl implements ICartService {
             ResponseVo.error(ResponseEnum.PRODUCT_STOCK_ERROR);
         }
         //写入到redis KEY: cart_1
-        redisTemplate.opsForValue().set(String.format(MallConst.CART_REDIS_KEY_TEMPLATE, uid),
-                gson.toJson(new Cart(product.getId(), quantity, form.getSelected())));
-        return null;
+        HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
+        String redisKey = String.format(MallConst.CART_REDIS_KEY_TEMPLATE, uid);
+        Cart cart;
+        String value = opsForHash.get(redisKey, String.valueOf(product.getId()));
+        if (StringUtils.isEmpty(value)) {
+            //没有该商品，新增
+            cart = new Cart(product.getId(), quantity, form.getSelected());
+        } else {
+            //已经存在该商品，数量+1
+            cart = gson.fromJson(value, Cart.class);
+            cart.setQuantity(cart.getQuantity() + quantity);
+        }
+        opsForHash.put(redisKey, String.valueOf(product.getId()), gson.toJson(cart));
+        return list(uid);
+    }
+
+    @Override
+    public ResponseVo<CartVo> list(Integer uid) {
+        HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
+        String redisKey = String.format(MallConst.CART_REDIS_KEY_TEMPLATE, uid);
+        Map<String, String> entries = opsForHash.entries(redisKey);
+        boolean selectAll = true;
+        Integer cartTotalQuantity = 0;
+        BigDecimal cartTotalPrice = BigDecimal.ZERO;
+        CartVo cartVo = new CartVo();
+        List<CartProductVo> cartProductVoList = new ArrayList<>();
+        for (Map.Entry<String, String> entry : entries.entrySet()) {
+            Integer productId = Integer.valueOf(entry.getKey());
+            Cart cart = gson.fromJson(entry.getValue(), Cart.class);
+            //TODO 需要优化，使用mysql里的in
+            Product product = productMapper.selectByPrimaryKey(productId);
+            if (product != null) {
+                CartProductVo cartProductVo = new CartProductVo(productId,
+                        cart.getQuantity(),
+                        product.getName(),
+                        product.getSubtitle(),
+                        product.getMainImage(),
+                        product.getPrice(),
+                        product.getStatus(),
+                        product.getPrice().multiply(BigDecimal.valueOf(cart.getQuantity())),
+                        product.getStock(),
+                        cart.getProductSelected()
+                        );
+                cartProductVoList.add(cartProductVo);
+
+                if (!cart.getProductSelected()) {
+                    selectAll = false;
+                }
+
+                //计算的是选中的总价
+                if (cart.getProductSelected()) {
+                    cartTotalPrice = cartTotalPrice.add(cartProductVo.getProductTotalPrice());
+                }
+            }
+            cartTotalQuantity += cart.getQuantity();
+        }
+        //有一个没有选中，就不叫全选
+        cartVo.setSelectAll(selectAll);
+        cartVo.setCartTotalQuantity(cartTotalQuantity);
+        cartVo.setCartTotalPrice(cartTotalPrice);
+        cartVo.setCartProductVoList(cartProductVoList);
+        return ResponseVo.success(cartVo);
     }
 }

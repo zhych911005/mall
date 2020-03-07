@@ -8,6 +8,8 @@ import com.zhych.mall.form.CartUpdateForm;
 import com.zhych.mall.vo.CartVo;
 import com.zhych.mall.vo.ResponseVo;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -26,7 +28,7 @@ public class ICartServiceTest extends MallApplicationTests {
 
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    @Test
+    @Before
     public void add() {
         CartAddForm form = new CartAddForm();
         form.setProductId(29);
@@ -50,9 +52,27 @@ public class ICartServiceTest extends MallApplicationTests {
         log.info("responseVo={}", gson.toJson(responseVo));
     }
 
-    @Test
+    @After
     public void delete() {
         ResponseVo<CartVo> responseVo = cartService.delete(1, 26);
+        log.info("responseVo={}", gson.toJson(responseVo));
+    }
+
+    @Test
+    public void selectAll() {
+        ResponseVo<CartVo> responseVo = cartService.selectAll(1);
+        log.info("responseVo={}", gson.toJson(responseVo));
+    }
+
+    @Test
+    public void unSelectAll() {
+        ResponseVo<CartVo> responseVo = cartService.unSelectAll(1);
+        log.info("responseVo={}", gson.toJson(responseVo));
+    }
+
+    @Test
+    public void sum() {
+        ResponseVo<Integer> responseVo = cartService.sum(1);
         log.info("responseVo={}", gson.toJson(responseVo));
     }
 }

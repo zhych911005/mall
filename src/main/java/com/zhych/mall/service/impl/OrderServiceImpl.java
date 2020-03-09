@@ -1,13 +1,14 @@
 package com.zhych.mall.service.impl;
 
+import com.zhych.mall.dao.OrderItemMapper;
+import com.zhych.mall.dao.OrderMapper;
 import com.zhych.mall.dao.ProductMapper;
 import com.zhych.mall.dao.ShippingMapper;
+import com.zhych.mall.enums.OrderStatusEnum;
+import com.zhych.mall.enums.PaymentTypeEnum;
 import com.zhych.mall.enums.ProductStatusEnum;
 import com.zhych.mall.enums.ResponseEnum;
-import com.zhych.mall.pojo.Cart;
-import com.zhych.mall.pojo.OrderItem;
-import com.zhych.mall.pojo.Product;
-import com.zhych.mall.pojo.Shipping;
+import com.zhych.mall.pojo.*;
 import com.zhych.mall.service.IOrderService;
 import com.zhych.mall.vo.OrderVo;
 import com.zhych.mall.vo.ResponseVo;
@@ -37,6 +38,12 @@ public class OrderServiceImpl implements IOrderService {
 
     @Autowired
     private ProductMapper productMapper;
+
+    @Autowired
+    private OrderMapper orderMapper;
+
+    @Autowired
+    private OrderItemMapper orderItemMapper;
 
 
     @Override
@@ -83,11 +90,12 @@ public class OrderServiceImpl implements IOrderService {
             if (product.getStock() < cart.getQuantity()) {
                 return ResponseVo.error(ResponseEnum.PRODUCT_STOCK_ERROR, "库存不正确" + product.getName());
             }
-
+            //******计算总价, 只计算选中的商品
+            //******生成订单, 入库：order和order_item, 事务
             OrderItem orderItem = builderOrderItem(uid, orderNo, cart.getQuantity(), product);
             orderItemList.add(orderItem);
 
-            //减库存
+            //******减库存
             product.setStock(product.getStock() - cart.getQuantity());
             int row = productMapper.updateByPrimaryKeySelective(product);
 
@@ -95,16 +103,32 @@ public class OrderServiceImpl implements IOrderService {
                 return ResponseVo.error(ResponseEnum.ERROR);
             }
         }
-        //******计算总价, 只计算选中的商品
 
-        //******生成订单, 入库：order和order_item, 事务
-
-        //******减库存
-
+        //todo
         //******更新购物车(选中的商品)
 
         //******构造orderVo
         return null;
+    }
+
+    private Order buildOrder(Integer uid,
+                             Long orderNo,
+                             Integer shippingId,
+                             List<OrderItem> orderItemList
+    ) {
+        BigDecimal payment = orderItemList.stream()
+                .map(OrderItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Order order = new Order();
+        order.setOrderNo(orderNo);
+        order.setUserId(uid);
+        order.setShippingId(shippingId);
+        order.setPayment(payment);
+        order.setPaymentType(PaymentTypeEnum.PAY_ONLINE.getCode());
+        order.setPostage(0);
+        order.setStatus(OrderStatusEnum.NO_PAY.getCode());
+        return order;
     }
 
     private Long generateOrderNo() {

@@ -181,6 +181,6 @@
     <include refid="Base_Column_List" />
     from mall_shipping
     where id = #{shippingId,jdbcType=INTEGER}
-    and user_id = id = #{uid,jdbcType=INTEGER}
+    and user_id = #{uid,jdbcType=INTEGER}
   </select>
 </mapper>

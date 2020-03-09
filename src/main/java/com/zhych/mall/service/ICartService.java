@@ -2,8 +2,11 @@ package com.zhych.mall.service;
 
 import com.zhych.mall.form.CartAddForm;
 import com.zhych.mall.form.CartUpdateForm;
+import com.zhych.mall.pojo.Cart;
 import com.zhych.mall.vo.CartVo;
 import com.zhych.mall.vo.ResponseVo;
+
+import java.util.List;
 
 /**
  * Created By Superman
@@ -28,4 +31,6 @@ public interface ICartService {
     ResponseVo<CartVo> unSelectAll(Integer uid);
 
     ResponseVo<Integer> sum(Integer uid);
+
+    List<Cart> listForCart(Integer uid);
 }

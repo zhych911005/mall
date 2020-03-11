@@ -14,6 +14,7 @@ import com.zhych.mall.vo.OrderVo;
 import com.zhych.mall.vo.ResponseVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
@@ -47,6 +48,7 @@ public class OrderServiceImpl implements IOrderService {
 
 
     @Override
+    @Transactional
     public ResponseVo<OrderVo> create(Integer uid, Integer shippingId) {
         //******收货地址的校验(总之要查出来的)
         Shipping shipping = shippingMapper.selectByUidAndShippingId(uid, shippingId);
@@ -90,25 +92,36 @@ public class OrderServiceImpl implements IOrderService {
             if (product.getStock() < cart.getQuantity()) {
                 return ResponseVo.error(ResponseEnum.PRODUCT_STOCK_ERROR, "库存不正确" + product.getName());
             }
-            //******计算总价, 只计算选中的商品
-            //******生成订单, 入库：order和order_item, 事务
-            OrderItem orderItem = builderOrderItem(uid, orderNo, cart.getQuantity(), product);
+
+            OrderItem orderItem = buildOrderItem(uid, orderNo, cart.getQuantity(), product);
             orderItemList.add(orderItem);
 
-            //******减库存
+            //减库存
             product.setStock(product.getStock() - cart.getQuantity());
             int row = productMapper.updateByPrimaryKeySelective(product);
-
             if (row <= 0) {
                 return ResponseVo.error(ResponseEnum.ERROR);
             }
+        }
+        //计算总价，只计算选中的商品
+        //生成订单，入库：order和order_item，事务
+        Order order = buildOrder(uid, orderNo, shippingId, orderItemList);
+
+        int rowForOrder = orderMapper.insertSelective(order);
+        if (rowForOrder <= 0) {
+            return ResponseVo.error(ResponseEnum.ERROR);
+        }
+
+        int rowForOrderItem = orderItemMapper.batchInsert(orderItemList);
+        if (rowForOrderItem <= 0) {
+            return ResponseVo.error(ResponseEnum.ERROR);
         }
 
         //todo
         //******更新购物车(选中的商品)
 
         //******构造orderVo
-        return null;
+        return ResponseVo.success();
     }
 
     private Order buildOrder(Integer uid,
@@ -131,11 +144,15 @@ public class OrderServiceImpl implements IOrderService {
         return order;
     }
 
+    /**
+     * 企业级：分布式唯一id/主键
+     * @return
+     */
     private Long generateOrderNo() {
         return System.currentTimeMillis() + new Random().nextInt(999);
     }
 
-    private OrderItem builderOrderItem(Integer uid, Long orderNo, Integer quantity, Product product){
+    private OrderItem buildOrderItem(Integer uid, Long orderNo, Integer quantity, Product product) {
         OrderItem item = new OrderItem();
         item.setUserId(uid);
         item.setOrderNo(orderNo);

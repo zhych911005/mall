@@ -1,23 +1,17 @@
 package com.zhych.mall.enums;
 
-import lombok.Getter;
 
-/**
- * Created By Superman
- * Date: 2020/3/10
- * Time: 0:57
- * Description:
- */
+import lombok.Getter;
 
 @Getter
 public enum PaymentTypeEnum {
 
-    PAY_ONLINE(1),
-    ;
+	PAY_ONLINE(1),
+	;
 
-    Integer code;
+	Integer code;
 
-    PaymentTypeEnum(Integer code) {
-        this.code = code;
-    }
+	PaymentTypeEnum(Integer code) {
+		this.code = code;
+	}
 }

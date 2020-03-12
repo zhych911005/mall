@@ -1,5 +1,8 @@
 package com.zhych.mall.service.impl;
 
+import com.github.pagehelper.PageInfo;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.zhych.mall.MallApplicationTests;
 import com.zhych.mall.enums.ResponseEnum;
 import com.zhych.mall.service.IOrderService;
@@ -25,12 +28,34 @@ public class OrderServiceImplTest extends MallApplicationTests {
 
     private Integer uid = 1;
 
-    private Integer shippingId = 6;
+    private Integer shippingId = 5;
+
+    private Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     @Test
-    public void create() {
+    public void createTest() {
+        ResponseVo<OrderVo> responseVo = create();
+        Assert.assertEquals(ResponseEnum.SUCCESS.getCode(), responseVo.getStatus());
+    }
+
+    private ResponseVo<OrderVo> create() {
         ResponseVo<OrderVo> responseVo = orderService.create(uid, shippingId);
-        log.info("responseVo={}", responseVo);
+        log.info("result={}", gson.toJson(responseVo));
+        return responseVo;
+    }
+
+    @Test
+    public void list() {
+        ResponseVo<PageInfo> responseVo = orderService.list(uid, 1, 4);
+        log.info("result={}", gson.toJson(responseVo));
+        Assert.assertEquals(ResponseEnum.SUCCESS.getCode(), responseVo.getStatus());
+    }
+
+    @Test
+    public void detail() {
+        ResponseVo<OrderVo> vo = create();
+        ResponseVo<OrderVo> responseVo = orderService.detail(uid, vo.getData().getOrderNo());
+        log.info("result={}", gson.toJson(responseVo));
         Assert.assertEquals(ResponseEnum.SUCCESS.getCode(), responseVo.getStatus());
     }
 }

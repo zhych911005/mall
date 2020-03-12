@@ -34,6 +34,8 @@ public enum ResponseEnum {
     SHIPPING_NOT_EXIST(17, "收货地址不存在"),
 
     CART_SELECTED_IS_EMPTY(18, "请选择商品后下单"),
+
+    ORDER_NOT_EXIST(17, "订单不存在"),
     ;
 
     Integer code;

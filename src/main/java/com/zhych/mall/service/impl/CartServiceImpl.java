@@ -36,6 +36,8 @@ import java.util.Map;
 @Service
 public class CartServiceImpl implements ICartService {
 
+    private final static String CART_REDIS_KEY_TEMPLATE = "cart_%d";
+
     @Autowired
     private ProductMapper productMapper;
 
@@ -195,8 +197,9 @@ public class CartServiceImpl implements ICartService {
 
     public List<Cart> listForCart(Integer uid) {
         HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
-        String redisKey = String.format(MallConst.CART_REDIS_KEY_TEMPLATE, uid);
+        String redisKey  = String.format(CART_REDIS_KEY_TEMPLATE, uid);
         Map<String, String> entries = opsForHash.entries(redisKey);
+
         List<Cart> cartList = new ArrayList<>();
         for (Map.Entry<String, String> entry : entries.entrySet()) {
             cartList.add(gson.fromJson(entry.getValue(), Cart.class));

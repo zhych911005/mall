@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Created By Superman
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 
 @Slf4j
+@Transactional
 public class OrderServiceImplTest extends MallApplicationTests {
 
     @Autowired
@@ -28,13 +30,14 @@ public class OrderServiceImplTest extends MallApplicationTests {
 
     private Integer uid = 1;
 
-    private Integer shippingId = 5;
+    private Integer shippingId = 6;
 
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     @Test
     public void createTest() {
-        ResponseVo<OrderVo> responseVo = create();
+        ResponseVo<OrderVo> responseVo = orderService.create(uid, shippingId);
+        log.info("result={}", gson.toJson(responseVo));
         Assert.assertEquals(ResponseEnum.SUCCESS.getCode(), responseVo.getStatus());
     }
 
@@ -55,6 +58,14 @@ public class OrderServiceImplTest extends MallApplicationTests {
     public void detail() {
         ResponseVo<OrderVo> vo = create();
         ResponseVo<OrderVo> responseVo = orderService.detail(uid, vo.getData().getOrderNo());
+        log.info("result={}", gson.toJson(responseVo));
+        Assert.assertEquals(ResponseEnum.SUCCESS.getCode(), responseVo.getStatus());
+    }
+
+    @Test
+    public void cancel() {
+        ResponseVo<OrderVo> vo = create();
+        ResponseVo responseVo = orderService.cancel(uid, vo.getData().getOrderNo());
         log.info("result={}", gson.toJson(responseVo));
         Assert.assertEquals(ResponseEnum.SUCCESS.getCode(), responseVo.getStatus());
     }

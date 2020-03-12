@@ -4,6 +4,11 @@ spring:
     username: root
     password: 369123
     url: jdbc:mysql://127.0.0.1:3306/mall?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&useSSL=false
+  rabbitmq:
+    addresses: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
   redis:
     host: 127.0.0.1
     port: 6379
